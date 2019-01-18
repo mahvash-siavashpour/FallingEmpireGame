@@ -218,10 +218,10 @@ int find_player(char file_name[],char player_name[],int *fpp,int primary_number)
             fclose(fp);
             return -1;
         }
-        printf("len1: %d    len2: %d\n",strlen(info.name),strlen(player_name));
+        //printf("len1: %d    len2: %d\n",strlen(info.name),strlen(player_name));
         if(strcmp(info.name,player_name)==0)
         {
-            printf("similar\n");
+            //printf("similar\n");
             fclose(fp);
             return 1;
         }
@@ -239,7 +239,7 @@ int save(char file_name[],saved_info info,int primary_number)//save the game her
     char temp[200];
     if(find_player(file_name,info.name,&fpp,primary_number)==1)
     {
-        printf("****\n");
+        //printf("****\n");
         FILE *fp=fopen(file_name,"r+");
         assert(fp!=NULL);
         fseek(fp,0,SEEK_SET);
@@ -257,16 +257,16 @@ int save(char file_name[],saved_info info,int primary_number)//save the game her
                 printf("%d\n",a);
             }
             fgets(temp,200,fp);
-            a=ftell(fp);
-            printf("%d\n",a);
-            printf("%s\n",temp);
+            //a=ftell(fp);
+           // printf("%d\n",a);
+            //printf("%s\n",temp);
         }
         fprintf(fp,"%s\n",info.name);
         fprintf(fp,"%d\n",info.status);
         fprintf(fp,"%d\n",info.people);
         fprintf(fp,"%d\n",info.treasury);
         fprintf(fp,"%d\n",info.court);
-        printf("here\n");
+       // printf("here\n");
         for(i=0;i<primary_number;i++)
         {
             fprintf(fp,"%d\n",info.problems[i]);
@@ -289,21 +289,23 @@ int save(char file_name[],saved_info info,int primary_number)//save the game her
     fclose(fp);
     return 1;
 }
-void play_music(void)
+void play_music(int a1,int a2,int a3)
 {
-    Beep(300,200);
-    Beep(350,200);
-    Beep(400,200);
+    Beep(a1,400);
+    Beep(a2,400);
+    Beep(a3,400);
 }
 int main()
 {
     console_color(0,23);
-    int people=50,treasury=50,court=50,number,primary_number,fpp,status;
+    int people=50,treasury=50,court=50,number,primary_number,fpp,status,exit=1;
     time_t seed=time(NULL);
     srand(seed);
     saved_info my_info;//save players info in this
-    play_music();//get the name
-    printf("Choose a Name: \n");
+    text_color(1);
+    printf("<The Falling Empire>\n");
+    play_music(300,350,400);//get the name
+    printf("Choose a Name:\n>");
     char player_name[200];
     scanf("%s",player_name);
     strcpy(my_info.name,player_name);
@@ -315,7 +317,25 @@ int main()
     {
         my_info.problems[i]=3;
     }
-    if(find_player("save.txt",player_name,&fpp,primary_number))//load a game
+    int resume=find_player("save.txt",player_name,&fpp,primary_number);//if the players name exists
+    if(resume==1)//resume or new
+    {
+        int temp;
+        text_color(4);
+        printf("\nGood To See You Back %s!\nYou Can Either :\n|1| Resume Your Game\n|2| Start a New Game\n>",player_name);
+        text_color(0);
+        scanf("%d",&temp);
+        if(temp==2) resume=0;
+        Sleep(100);
+
+    }
+    else
+    {
+        text_color(4);
+        printf("\nHi %s!\n",player_name);
+        Sleep(1000);
+    }
+    if(resume==1)//load a game
     {
         int i,j,read_temp;
         char temp[200];
@@ -353,7 +373,10 @@ int main()
             }
         }
     }
-    printf("|People: %d| |Treasury: %d| |Court: %d| \n",people,treasury,court);
+    system("cls");
+    text_color(2);
+    printf("\n|People: %d| |Treasury: %d| |Court: %d|\n\n",people,treasury,court);
+    text_color(0);
     while(1)//the entire GAME!
     {
         int i,end_loop=rand()%number,choice;
@@ -363,7 +386,11 @@ int main()
             cur=cur->next;
         my_info.problems[cur->count]--;
         cur->possibility--;
-        printf("%s\n|1| %s\n|2| %s",cur->question,cur->ans1,cur->ans2);
+        text_color(0);
+        printf("%s\n",cur->question);
+        text_color(13);
+        printf("|1| %s|2| %s>",cur->ans1,cur->ans2);
+        text_color(0);
         if(cur->possibility==0)
         {
             my_info.problems[cur->count]=-1;
@@ -380,32 +407,50 @@ int main()
             number=primary_number;
         }
         scanf("%d",&choice);
-        choice--;
-        //do the changes to the government
-        people+=cur->people[choice];     if(people<0) people=0;     else if(people>100) people=100;
-        treasury+=cur->treasury[choice]; if(treasury<0) treasury=0; else if(treasury>100) treasury=100;
-        court+=cur->court[choice];       if(court<0) court=0;       else if(court>100) court=100;
-
-        my_info.people=people;
-        my_info.treasury=treasury;
-        my_info.court=court;
-
-        average=(people+treasury+court)/3;
-        printf("|People: %d| |Treasury: %d| |Court: %d| \n",people,treasury,court);
-        if(people==0 || treasury==0 || court==0 || average<=10)//end of game
+        if(choice==0)
         {
-            my_info.status=-1;
-            printf("Your Empire Has Fallen\nWhat Would You Like To Do?\n|1| Save and Exit\n|2| Exit\n");
+            exit=0;
+        }
+        else
+        {
+            choice--;
+            //do the changes to the government
+            people+=cur->people[choice];     if(people<0) people=0;     else if(people>100) people=100;
+            treasury+=cur->treasury[choice]; if(treasury<0) treasury=0; else if(treasury>100) treasury=100;
+            court+=cur->court[choice];       if(court<0) court=0;       else if(court>100) court=100;
+
+            my_info.people=people;
+            my_info.treasury=treasury;
+            my_info.court=court;
+
+            average=(people+treasury+court)/3;
+        }
+        system("cls");
+        text_color(2);
+        printf("\n|People: %d| |Treasury: %d| |Court: %d|\n\n",people,treasury,court);
+        text_color(0);
+        if(people==0 || treasury==0 || court==0 || average<=10 || exit==0)//end of game
+        {
+            my_info.status=0;
+            text_color(12);
+            if(exit!=0)
+            {
+                my_info.status=-1;
+                play_music(500,550,600);
+                printf("Your Empire Has Fallen \n");
+            }
+            printf("What Would You Like To Do?\n|1| Save and Exit\n|2| Exit\n>");
             int choice;
             scanf("%d",&choice);
+            text_color(2);
             if(choice==2)
             {
-                printf("Goodbye!\n");
+                printf("\nGoodbye! ^__^\n");
                 break;
             }
             if(save("save.txt",my_info,primary_number))
             {
-                printf("Saved Successfully!\n");
+                printf("\nSaved Successfully!\n");
                 break;
             }
 
@@ -414,5 +459,6 @@ int main()
     }
     //Beep(300, 500);
     //printf("\a");
+    text_color(0);
     return 0;
 }
