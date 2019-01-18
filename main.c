@@ -11,20 +11,50 @@ struct problems//the entire shit
     char ans1[200];
     int people[2],court[2],treasury[2];
     char ans2[200];
-    int possibility;
-    int count;
+    int possibility;//3-0
+    int count;//number of the node
     struct problem *next;
 };typedef struct problems problem;
 
 struct saved_info//what we save
 {
-    char name[200];
-    int problems[200];
+    char name[200];//players name
+    int problems[200];//possibility of nodes in an array
     int people,treasury,court;
+    int status;//saved meanwhile playing or when lost
 
 };typedef struct saved_info saved_info;
 
-void SetColor(int ForgC)
+void console_color(int ForgC, int BackC)
+ {
+ WORD wColor = ((BackC & 0x0F) << 4) + (ForgC & 0x0F);
+               //Get the handle to the current output buffer...
+ HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+                     //This is used to reset the carat/cursor to the top left.
+ COORD coord = {0, 0};
+                  //A return value... indicating how many chars were written
+                    //   not used but we need to capture this since it will be
+                      //   written anyway (passing NULL causes an access violation).
+  DWORD count;
+
+                               //This is a structure containing all of the console info
+                      // it is used here to find the size of the console.
+ CONSOLE_SCREEN_BUFFER_INFO csbi;
+                 //Here we will set the current color
+ SetConsoleTextAttribute(hStdOut, wColor);
+ if(GetConsoleScreenBufferInfo(hStdOut, &csbi))
+ {
+                          //This fills the buffer with a given character (in this case 32=space).
+      FillConsoleOutputCharacter(hStdOut, (TCHAR) 32, csbi.dwSize.X * csbi.dwSize.Y, coord, &count);
+
+      FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &count );
+                          //This will set our cursor position for the next print statement.
+      SetConsoleCursorPosition(hStdOut, coord);
+ }
+ return;
+}
+
+void text_color(int ForgC)
  {
      WORD wColor;
 
@@ -59,21 +89,21 @@ problem *create_new(problem new_problem)//create new nodes
 
 int add_end(problem **head,problem *new_problem)//add nodes to the end of link list
 {
-    int count=0;
+    int my_count=0;
     problem *cur=*head;
     if(*head==NULL)
     {
         *head=new_problem;
-        cur->count=0;
+        (*head)->count=0;
         return 1;
     }
     while(cur->next != NULL)
     {
         cur=cur->next;
-        count++;
+        my_count++;
     }
     cur->next=new_problem;
-    cur->count=count;
+    cur->count=my_count;
     return 1;
 }
 
@@ -126,15 +156,18 @@ problem *make_linkedlist(char name[],int *number)//makes a linked list using the
         new_val.count=0;
         problem *new_prob=create_new(new_val);
         add_end(&head,new_prob);
+        fclose(fpp);
         (*number)++;
 
     }
+    fclose(fp);
     return head;
 }
-int find_player(char file_name[],char player_name[],int *fpp)//checks if the game should start from the beginning or resume
+/*int find_player(char file_name[],char player_name[],int *fpp)//checks if the player has any history
 {
-    FILE *fp=fopen(file_name,"r");
+    FILE *fp=fopen(file_name,"a+b");
     if(fp==NULL)printf("3");
+    fseek(fp,0,SEEK_SET);
     saved_info *read;
     while(1)
     {
@@ -147,6 +180,7 @@ int find_player(char file_name[],char player_name[],int *fpp)//checks if the gam
             return 1;
         }
     }
+    fclose(fp);
     return -1;
 }
 int save(char file_name[],saved_info *info)
@@ -155,39 +189,127 @@ int save(char file_name[],saved_info *info)
     int fpp;
     if(find_player(file_name,info->name,&fpp))
     {
-        FILE *fp=fopen(file_name,"r+b");
+        FILE *fp=fopen(file_name,"a+b");
         if(fp==NULL)printf("1");
         fseek(fp,fpp,SEEK_SET);
         fwrite(info,1,sizeof(saved_info),fp);
         fclose(fp);
         return 1;
     }
-    FILE *fp=fopen(file_name,"r+b");
+    FILE *fp=fopen(file_name,"a+b");
     if(fp==NULL)printf("2");
     fseek(fp,0,SEEK_END);
     fwrite(info,1,sizeof(saved_info),fp);
     fclose(fp);
     return 1;
-}
-void play_music(void)
+}*/
+int find_player(char file_name[],char player_name[],int *fpp,int primary_number)//if the player has a history
 {
-    Beep(300,400);
-    Beep(350,300);
-    Beep(400,300);
+    int i,read_temp;
+    (*fpp)=0;
+    saved_info info;
+    FILE *fp=fopen(file_name,"r");
+    assert(fp!=NULL);
+    fseek(fp,0,SEEK_SET);
+    while(1)
+    {
+        if(fscanf(fp,"%s",info.name)==EOF)
+        {
+            fclose(fp);
+            return -1;
+        }
+        //printf("len1: %d    len2: %d\n",strlen(info.name),strlen(player_name));
+        if(strcmp(info.name,player_name)==0)
+        {
+            //printf("similar\n");
+            fclose(fp);
+            return 1;
+        }
+        for(i=0;i<4+primary_number;i++)
+                fscanf(fp,"%d",&read_temp);
+        (*fpp)++;
+    }
+    fclose(fp);
+    return -1;
+}
+int save(char file_name[],saved_info info,int primary_number)//save the game here
+{
+    int j,i,fpp;
+    int read_temp;
+    char temp[200];
+    if(find_player(file_name,info.name,&fpp,primary_number)==1)
+    {
+        //printf("****\n");
+        FILE *fp=fopen(file_name,"r+");
+        assert(fp!=NULL);
+        fseek(fp,0,SEEK_SET);
+        printf("%d\n",fpp);
+        for(j=0;j<fpp;j++)
+        {
+            fgets(temp,200,fp);
+            int a=ftell(fp);
+            printf("%d\n",a);
+            for(i=0;i<4+primary_number;i++)
+            {
+                fscanf(fp,"%d",&read_temp);
+                //printf("%d\n",read_temp);
+                int a=ftell(fp);
+                printf("%d\n",a);
+            }
+            fgets(temp,200,fp);
+            //a=ftell(fp);
+           // printf("%d\n",a);
+            //printf("%s\n",temp);
+        }
+        fprintf(fp,"%s\n",info.name);
+        fprintf(fp,"%d\n",info.status);
+        fprintf(fp,"%d\n",info.people);
+        fprintf(fp,"%d\n",info.treasury);
+        fprintf(fp,"%d\n",info.court);
+       // printf("here\n");
+        for(i=0;i<primary_number;i++)
+        {
+            fprintf(fp,"%d\n",info.problems[i]);
+        }
+        fclose(fp);
+        return 1;
+    }
+    FILE *fp=fopen(file_name,"r+");
+    assert(fp!=NULL);
+    fseek(fp,0,SEEK_END);
+    fprintf(fp,"%s\n",info.name);
+    fprintf(fp,"%d\n",info.status);
+    fprintf(fp,"%d\n",info.people);
+    fprintf(fp,"%d\n",info.treasury);
+    fprintf(fp,"%d\n",info.court);
+    for(i=0;i<primary_number;i++)
+    {
+        fprintf(fp,"%d\n",info.problems[i]);
+    }
+    fclose(fp);
+    return 1;
+}
+void play_music(int a1,int a2,int a3)
+{
+    Beep(a1,400);
+    Beep(a2,400);
+    Beep(a3,400);
 }
 int main()
 {
-    int people=50,treasury=50,court=50,number,primary_number;
+    console_color(0,23);
+    int people=50,treasury=50,court=50,number,primary_number,fpp,status,exit=1;
     time_t seed=time(NULL);
     srand(seed);
     saved_info my_info;//save players info in this
-    play_music();//get the name
-    printf("Choose a Name: \n");
+    text_color(1);
+    printf("<The Falling Empire>\n");
+    play_music(300,350,400);//get the name
+    printf("Choose a Name:\n>");
     char player_name[200];
     scanf("%s",player_name);
     strcpy(my_info.name,player_name);
     problem *head=make_linkedlist("CHOICES.txt",&number);//make the linked list
-    printf("1\n");
     primary_number=number;
     problem *cur=head;
     int i;
@@ -195,6 +317,66 @@ int main()
     {
         my_info.problems[i]=3;
     }
+    int resume=find_player("save.txt",player_name,&fpp,primary_number);//if the players name exists
+    if(resume==1)//resume or new
+    {
+        int temp;
+        text_color(4);
+        printf("\nGood To See You Back %s!\nYou Can Either :\n|1| Resume Your Game\n|2| Start a New Game\n>",player_name);
+        text_color(0);
+        scanf("%d",&temp);
+        if(temp==2) resume=0;
+        Sleep(100);
+
+    }
+    else
+    {
+        text_color(4);
+        printf("\nHi %s!\n",player_name);
+        Sleep(1000);
+    }
+    if(resume==1)//load a game
+    {
+        int i,j,read_temp;
+        char temp[200];
+        FILE *fp=fopen("save.txt","r");
+        assert(fp!=NULL);
+        fseek(fp,0,SEEK_SET);
+        for(j=0;j<fpp;j++)
+        {
+            fgets(temp,200,fp);
+            for(i=0;i<4+primary_number;i++)
+            {
+                fscanf(fp,"%d",&read_temp);
+                //printf("%d\n",read_temp);
+            }
+            fgets(temp,200,fp);//waste
+        }
+        fgets(temp,200,fp);//players name
+        fscanf(fp,"%d",&status);
+        if(status!=-1)
+        {
+            fscanf(fp,"%d",&people);
+            fscanf(fp,"%d",&treasury);
+            fscanf(fp,"%d",&court);
+            for(i=0;i<primary_number;i++)
+            {
+               fscanf(fp,"%d",&my_info.problems[i]);
+               cur->possibility=my_info.problems[i];
+               if(cur->possibility==0)
+                {
+                    my_info.problems[cur->count]=-1;
+                    delete_problem(&head,cur);
+                    number--;
+                }
+               cur=cur->next;
+            }
+        }
+    }
+    system("cls");
+    text_color(2);
+    printf("\n|People: %d| |Treasury: %d| |Court: %d|\n\n",people,treasury,court);
+    text_color(0);
     while(1)//the entire GAME!
     {
         int i,end_loop=rand()%number,choice;
@@ -204,7 +386,11 @@ int main()
             cur=cur->next;
         my_info.problems[cur->count]--;
         cur->possibility--;
-        printf("%s\n|1| %s\n|2| %s",cur->question,cur->ans1,cur->ans2);
+        text_color(0);
+        printf("%s\n",cur->question);
+        text_color(13);
+        printf("|1| %s|2| %s>",cur->ans1,cur->ans2);
+        text_color(0);
         if(cur->possibility==0)
         {
             my_info.problems[cur->count]=-1;
@@ -221,31 +407,50 @@ int main()
             number=primary_number;
         }
         scanf("%d",&choice);
-        choice--;
-        //do the changes to the government
-        people+=cur->people[choice];     if(people<0) people=0;     else if(people>100) people=100;
-        treasury+=cur->treasury[choice]; if(treasury<0) treasury=0; else if(treasury>100) treasury=100;
-        court+=cur->court[choice];       if(court<0) court=0;       else if(court>100) court=100;
-
-        my_info.people=people;
-        my_info.treasury=treasury;
-        my_info.court=court;
-
-        average=(people+treasury+court)/3;
-        printf("|People: %d| |Treasury: %d| |Court: %d| \n",people,treasury,court);
-        if(people==0 || treasury==0 || court==0 || average<=10)//end of game
+        if(choice==0)
         {
-            printf("Your Empire Has Fallen\nWhat Would You Like To Do?\n|1| Save and Exit\n|2| Exit\n");
+            exit=0;
+        }
+        else
+        {
+            choice--;
+            //do the changes to the government
+            people+=cur->people[choice];     if(people<0) people=0;     else if(people>100) people=100;
+            treasury+=cur->treasury[choice]; if(treasury<0) treasury=0; else if(treasury>100) treasury=100;
+            court+=cur->court[choice];       if(court<0) court=0;       else if(court>100) court=100;
+
+            my_info.people=people;
+            my_info.treasury=treasury;
+            my_info.court=court;
+
+            average=(people+treasury+court)/3;
+        }
+        system("cls");
+        text_color(2);
+        printf("\n|People: %d| |Treasury: %d| |Court: %d|\n\n",people,treasury,court);
+        text_color(0);
+        if(people==0 || treasury==0 || court==0 || average<=10 || exit==0)//end of game
+        {
+            my_info.status=0;
+            text_color(12);
+            if(exit!=0)
+            {
+                my_info.status=-1;
+                play_music(500,550,600);
+                printf("Your Empire Has Fallen \n");
+            }
+            printf("What Would You Like To Do?\n|1| Save and Exit\n|2| Exit\n>");
             int choice;
             scanf("%d",&choice);
+            text_color(2);
             if(choice==2)
             {
-                printf("Goodbye!\n");
+                printf("\nGoodbye! ^__^\n");
                 break;
             }
-            if(save("../info.bin",&my_info))
+            if(save("save.txt",my_info,primary_number))
             {
-                printf("Saved Successfully!\n");
+                printf("\nSaved Successfully!\n");
                 break;
             }
 
@@ -254,5 +459,6 @@ int main()
     }
     //Beep(300, 500);
     //printf("\a");
+    text_color(0);
     return 0;
 }
