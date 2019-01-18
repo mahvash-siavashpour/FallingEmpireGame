@@ -21,6 +21,7 @@ struct saved_info//what we save
     char name[200];
     int problems[200];
     int people,treasury,court;
+    int status;
 
 };typedef struct saved_info saved_info;
 
@@ -126,15 +127,18 @@ problem *make_linkedlist(char name[],int *number)//makes a linked list using the
         new_val.count=0;
         problem *new_prob=create_new(new_val);
         add_end(&head,new_prob);
+        fclose(fpp);
         (*number)++;
 
     }
+    fclose(fp);
     return head;
 }
-int find_player(char file_name[],char player_name[],int *fpp)//checks if the game should start from the beginning or resume
+/*int find_player(char file_name[],char player_name[],int *fpp)//checks if the player has any history
 {
-    FILE *fp=fopen(file_name,"r+b");
+    FILE *fp=fopen(file_name,"a+b");
     if(fp==NULL)printf("3");
+    fseek(fp,0,SEEK_SET);
     saved_info *read;
     while(1)
     {
@@ -147,26 +151,89 @@ int find_player(char file_name[],char player_name[],int *fpp)//checks if the gam
             return 1;
         }
     }
+    fclose(fp);
     return -1;
 }
 int save(char file_name[],saved_info *info)
 {
-    printf("%s",file_name);
     saved_info *read_info;
     int fpp;
     if(find_player(file_name,info->name,&fpp))
     {
-        FILE *fp=fopen(file_name,"r+b");
+        FILE *fp=fopen(file_name,"a+b");
         if(fp==NULL)printf("1");
         fseek(fp,fpp,SEEK_SET);
         fwrite(info,1,sizeof(saved_info),fp);
         fclose(fp);
         return 1;
     }
-    FILE *fp=fopen(file_name,"r+b");
+    FILE *fp=fopen(file_name,"a+b");
     if(fp==NULL)printf("2");
     fseek(fp,0,SEEK_END);
     fwrite(info,1,sizeof(saved_info),fp);
+    fclose(fp);
+    return 1;
+}*/
+int find_player(char file_name[],char player_name[],int *fpp,int primary_number)
+{
+    int i,read;
+    (*fpp)=0;
+    saved_info info;
+    FILE *fp=fopen(file_name,"r");
+    assert(fp!=NULL);
+    fseek(fp,0,SEEK_SET);
+    while(1)
+    {
+        printf("^^^^\n");
+        if(fscanf(fp,"%s",info.name)==EOF) return -1;
+        printf("####\n");
+        printf("_________\n");
+        printf("%d    %d\n",strlen(info.name),strlen(player_name));
+        if(strcmp(info.name,player_name)==0) return 1;
+        for(i=0;i<4+primary_number;i++)
+                fscanf(fp,"%d",&read);
+        (*fpp)++;
+    }
+    return -1;
+}
+int save(char file_name[],saved_info info,int primary_number)
+{
+    int j,i,fpp;
+    if(find_player(file_name,info.name,&fpp,primary_number)==1)
+    {
+        printf("****\n");
+        FILE *fp=fopen(file_name,"r+");
+        fseek(fp,0,SEEK_SET);
+        for(j=0;j<fpp;j++)
+        {
+            fscanf(fp,"%s",info.name);
+            for(i=0;i<4+primary_number;i++)
+                fscanf(fp,"%d",&read);
+        }
+        fprintf(fp,"%s\n",info.name);
+        fprintf(fp,"%d\n",info.people);
+        fprintf(fp,"%d\n",info.treasury);
+        fprintf(fp,"%d\n",info.court);
+        fprintf(fp,"%d\n",info.status);
+        for(i=0;i<primary_number;i++)
+        {
+            fprintf(fp,"%d\n",info.problems[i]);
+        }
+        fclose(fp);
+        return 1;
+    }
+    FILE *fp=fopen(file_name,"a+");
+    assert(fp!=NULL);
+    fseek(fp,0,SEEK_SET);
+    fprintf(fp,"%s\n",info.name);
+    fprintf(fp,"%d\n",info.people);
+    fprintf(fp,"%d\n",info.treasury);
+    fprintf(fp,"%d\n",info.court);
+    fprintf(fp,"%d\n",info.status);
+    for(i=0;i<primary_number;i++)
+    {
+        fprintf(fp,"%d\n",info.problems[i]);
+    }
     fclose(fp);
     return 1;
 }
@@ -235,6 +302,7 @@ int main()
         printf("|People: %d| |Treasury: %d| |Court: %d| \n",people,treasury,court);
         if(people==0 || treasury==0 || court==0 || average<=10)//end of game
         {
+            my_info.status=-1;
             printf("Your Empire Has Fallen\nWhat Would You Like To Do?\n|1| Save and Exit\n|2| Exit\n");
             int choice;
             scanf("%d",&choice);
@@ -243,7 +311,7 @@ int main()
                 printf("Goodbye!\n");
                 break;
             }
-            if(save("savings.bin",&my_info))
+            if(save("save.txt",my_info,primary_number))
             {
                 printf("Saved Successfully!\n");
                 break;
