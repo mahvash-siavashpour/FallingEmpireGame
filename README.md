@@ -1,4 +1,4 @@
 # TheFallingEmpire
 *Term1 Final Project*
-Mahvash Siavashpour
+|Mahvash Siavashpour|
 Amirkabir University of Technology
