@@ -242,19 +242,19 @@ int save(char file_name[],saved_info info,int primary_number)//save the game her
         //printf("****\n");
         FILE *fp=fopen(file_name,"r+");
         assert(fp!=NULL);
-        fseek(fp,0,SEEK_SET);
-        printf("%d\n",fpp);
+        //fseek(fp,0,SEEK_SET);
+        //printf("%d\n",fpp);
         for(j=0;j<fpp;j++)
         {
             fgets(temp,200,fp);
             int a=ftell(fp);
-            printf("%d\n",a);
+            //printf("%d\n",a);
             for(i=0;i<4+primary_number;i++)
             {
                 fscanf(fp,"%d",&read_temp);
                 //printf("%d\n",read_temp);
                 int a=ftell(fp);
-                printf("%d\n",a);
+               // printf("%d\n",a);
             }
             fgets(temp,200,fp);
             //a=ftell(fp);
@@ -289,6 +289,43 @@ int save(char file_name[],saved_info info,int primary_number)//save the game her
     fclose(fp);
     return 1;
 }
+int power_save(char file_name[],saved_info info,int primary_number)
+{
+    static int a=0;
+    FILE *fp;
+    if(a==0)
+        fp=fopen(file_name,"w");
+    else
+        fp=fopen(file_name,"r+");
+    a++;
+    assert(fp!=NULL);
+    fseek(fp,0,SEEK_SET);
+    fprintf(fp,"%s\n",info.name);
+    fprintf(fp,"%d\n",info.status);
+    fprintf(fp,"%d\n",info.people);
+    fprintf(fp,"%d\n",info.treasury);
+    fprintf(fp,"%d\n",info.court);
+    int i;
+    for(i=0;i<primary_number;i++)
+    {
+        fprintf(fp,"%d\n",info.problems[i]);
+    }
+    fclose(fp);
+    return 1;
+}
+int if_power(char file_name[])
+{
+    FILE *fp=fopen(file_name,"r");
+    assert(fp!=NULL);
+    fseek(fp,0,SEEK_SET);
+    char temp[200];
+    int status;
+    fgets(temp,200,fp);
+    fscanf(fp,"%d",&status);
+    //printf("%d",status);
+    if(status==1) return 1;
+    return 0;
+}
 void play_music(int a1,int a2,int a3)
 {
     Beep(a1,400);
@@ -298,81 +335,119 @@ void play_music(int a1,int a2,int a3)
 int main()
 {
     console_color(0,23);
-    int people=50,treasury=50,court=50,number,primary_number,fpp,status,exit=1;
+    int people=50,treasury=50,court=50,number,primary_number,fpp,status,exit=1,choose=0;
     time_t seed=time(NULL);
     srand(seed);
     saved_info my_info;//save players info in this
     text_color(1);
     printf("<The Falling Empire>\n");
     play_music(300,350,400);//get the name
-    printf("Choose a Name:\n>");
-    char player_name[200];
-    scanf("%s",player_name);
-    strcpy(my_info.name,player_name);
     problem *head=make_linkedlist("CHOICES.txt",&number);//make the linked list
     primary_number=number;
     problem *cur=head;
-    int i;
-    for(i=0;i<primary_number;i++)
+    char player_name[200];
+    if(if_power("power.txt")==1)//if there was a power cut last time
     {
-        my_info.problems[i]=3;
+        printf("\nYou Have an Unsaved Game! What Do You Do?\n\n|1| Resume\n|2| New Game\n>");
+        scanf("%d",&choose);
     }
-    int resume=find_player("save.txt",player_name,&fpp,primary_number);//if the players name exists
-    if(resume==1)//resume or new
-    {
-        int temp;
-        text_color(4);
-        printf("\nGood To See You Back %s!\nYou Can Either :\n|1| Resume Your Game\n|2| Start a New Game\n>",player_name);
-        text_color(0);
-        scanf("%d",&temp);
-        if(temp==2) resume=0;
-        Sleep(100);
-
-    }
-    else
-    {
-        text_color(4);
-        printf("\nHi %s!\n",player_name);
-        Sleep(1000);
-    }
-    if(resume==1)//load a game
+    if(choose==1)//resume the power cut game*****************************
     {
         int i,j,read_temp;
-        char temp[200];
-        FILE *fp=fopen("save.txt","r");
+        FILE *fp=fopen("power.txt","r");
         assert(fp!=NULL);
         fseek(fp,0,SEEK_SET);
-        for(j=0;j<fpp;j++)
-        {
-            fgets(temp,200,fp);
-            for(i=0;i<4+primary_number;i++)
-            {
-                fscanf(fp,"%d",&read_temp);
-                //printf("%d\n",read_temp);
-            }
-            fgets(temp,200,fp);//waste
-        }
-        fgets(temp,200,fp);//players name
+        fscanf(fp,"%s",player_name);//players name
         fscanf(fp,"%d",&status);
-        if(status!=-1)
+        fscanf(fp,"%d",&people);
+        fscanf(fp,"%d",&treasury);
+        fscanf(fp,"%d",&court);
+        for(i=0;i<primary_number;i++)
         {
-            fscanf(fp,"%d",&people);
-            fscanf(fp,"%d",&treasury);
-            fscanf(fp,"%d",&court);
-            for(i=0;i<primary_number;i++)
+            fscanf(fp,"%d",&my_info.problems[i]);
+            cur->possibility=my_info.problems[i];
+            if(cur->possibility==0)
             {
-               fscanf(fp,"%d",&my_info.problems[i]);
-               cur->possibility=my_info.problems[i];
-               if(cur->possibility==0)
+                my_info.problems[cur->count]=-1;
+                delete_problem(&head,cur);
+                number--;
+            }
+            cur=cur->next;
+        }
+        strcpy(my_info.name,player_name);
+        text_color(4);
+        printf("\nHello %s!\nIts Good To See You Back\n\n",player_name);
+        text_color(0);
+        Sleep(3000);
+    }
+
+    else if(choose==2 || choose==0)//start a new game regarding the power cut game*****************************
+    {
+        printf("Choose a Name:\n>");
+        scanf("%s",player_name);
+        strcpy(my_info.name,player_name);
+        int i;
+        for(i=0;i<primary_number;i++)
+        {
+            my_info.problems[i]=3;
+        }
+        int resume=find_player("save.txt",player_name,&fpp,primary_number);//if the players name exists
+        if(resume==1)//resume or new
+        {
+            int temp;
+            text_color(4);
+            printf("\nGood To See You Back %s!\nYou Can Either :\n|1| Resume Your Game\n|2| Start a New Game\n>",player_name);
+            text_color(0);
+            scanf("%d",&temp);
+            if(temp==2) resume=0;
+            Sleep(100);
+        }
+        else
+        {
+            text_color(4);
+            printf("\nHi %s!\n",player_name);
+            Sleep(1000);
+        }
+        if(resume==1)//load a game
+        {
+            int i,j,read_temp;
+            char temp[200];
+            FILE *fp=fopen("save.txt","r");
+            assert(fp!=NULL);
+            fseek(fp,0,SEEK_SET);
+            for(j=0;j<fpp;j++)
+            {
+                fgets(temp,200,fp);
+                for(i=0;i<4+primary_number;i++)
                 {
-                    my_info.problems[cur->count]=-1;
-                    delete_problem(&head,cur);
-                    number--;
+                    fscanf(fp,"%d",&read_temp);
+                    //printf("%d\n",read_temp);
                 }
-               cur=cur->next;
+                fgets(temp,200,fp);//waste
+            }
+            fgets(temp,200,fp);//players name
+            fscanf(fp,"%d",&status);
+            if(status!=-1)
+            {
+                fscanf(fp,"%d",&people);
+                fscanf(fp,"%d",&treasury);
+                fscanf(fp,"%d",&court);
+                for(i=0;i<primary_number;i++)
+                {
+                    fscanf(fp,"%d",&my_info.problems[i]);
+                    cur->possibility=my_info.problems[i];
+                    if(cur->possibility==0)
+                    {
+                        my_info.problems[cur->count]=-1;
+                        delete_problem(&head,cur);
+                        number--;
+                    }
+                cur=cur->next;
+                }
             }
         }
     }
+
     system("cls");
     text_color(2);
     printf("\n|People: %d| |Treasury: %d| |Court: %d|\n\n",people,treasury,court);
@@ -429,6 +504,8 @@ int main()
         text_color(2);
         printf("\n|People: %d| |Treasury: %d| |Court: %d|\n\n",people,treasury,court);
         text_color(0);
+        my_info.status=1;
+        power_save("power.txt",my_info,primary_number);
         if(people==0 || treasury==0 || court==0 || average<=10 || exit==0)//end of game
         {
             my_info.status=0;
@@ -450,6 +527,7 @@ int main()
             }
             if(save("save.txt",my_info,primary_number))
             {
+                power_save("power.txt",my_info,primary_number);
                 printf("\nSaved Successfully!\n");
                 break;
             }
