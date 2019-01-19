@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <dos.h>
 #include <windows.h>
+#include <math.h>
 
-struct problems//the entire shit
+struct problems//the entire thing
 {
     char question[200];
     char ans1[200];
@@ -16,7 +16,7 @@ struct problems//the entire shit
     struct problem *next;
 };typedef struct problems problem;
 
-struct saved_info//what we save
+struct saved_info//information we save
 {
     char name[200];//players name
     int problems[200];//possibility of nodes in an array
@@ -25,7 +25,7 @@ struct saved_info//what we save
 
 };typedef struct saved_info saved_info;
 
-void console_color(int ForgC, int BackC)
+void console_color(int ForgC, int BackC)//color of the console
  {
  WORD wColor = ((BackC & 0x0F) << 4) + (ForgC & 0x0F);
                //Get the handle to the current output buffer...
@@ -54,7 +54,7 @@ void console_color(int ForgC, int BackC)
  return;
 }
 
-void text_color(int ForgC)
+void text_color(int ForgC)//text color
  {
      WORD wColor;
 
@@ -70,7 +70,7 @@ void text_color(int ForgC)
      }
      return;
  }
-problem *create_new(problem new_problem)//create new nodes
+problem *create_new(problem new_problem)//create new nodes for each problem
 {
     problem *new_node=(problem *)malloc(sizeof(problem));
     assert((new_node!=NULL));
@@ -128,7 +128,7 @@ int delete_problem(problem **head,problem *waste)//delete nodes by their address
     return 1;
 }
 
-problem *make_linkedlist(char name[],int *number)//makes a linked list using the name of the text file given
+problem *make_linkedlist(char name[],int *number)//makes a linked list using the name of the main text file given
 {
     (*number)=0;
     char q_file[200];
@@ -208,7 +208,7 @@ int find_player(char file_name[],char player_name[],int *fpp,int primary_number)
     int i,read_temp;
     (*fpp)=0;
     saved_info info;
-    FILE *fp=fopen(file_name,"r");
+    FILE *fp=fopen(file_name,"a+");
     assert(fp!=NULL);
     fseek(fp,0,SEEK_SET);
     while(1)
@@ -218,10 +218,8 @@ int find_player(char file_name[],char player_name[],int *fpp,int primary_number)
             fclose(fp);
             return -1;
         }
-        //printf("len1: %d    len2: %d\n",strlen(info.name),strlen(player_name));
         if(strcmp(info.name,player_name)==0)
         {
-            //printf("similar\n");
             fclose(fp);
             return 1;
         }
@@ -232,41 +230,35 @@ int find_player(char file_name[],char player_name[],int *fpp,int primary_number)
     fclose(fp);
     return -1;
 }
-int save(char file_name[],saved_info info,int primary_number)//save the game here
+int save(char file_name[],saved_info info,int primary_number)//save the game
 {
     int j,i,fpp;
     int read_temp;
     char temp[200];
     if(find_player(file_name,info.name,&fpp,primary_number)==1)
     {
-        //printf("****\n");
         FILE *fp=fopen(file_name,"r+");
         assert(fp!=NULL);
-        //fseek(fp,0,SEEK_SET);
-        //printf("%d\n",fpp);
+        fseek(fp,0,SEEK_SET);
+        int count=0;
         for(j=0;j<fpp;j++)
         {
             fgets(temp,200,fp);
             int a=ftell(fp);
-            //printf("%d\n",a);
             for(i=0;i<4+primary_number;i++)
             {
                 fscanf(fp,"%d",&read_temp);
-                //printf("%d\n",read_temp);
-                int a=ftell(fp);
-               // printf("%d\n",a);
             }
             fgets(temp,200,fp);
-            //a=ftell(fp);
-           // printf("%d\n",a);
-            //printf("%s\n",temp);
         }
-        fprintf(fp,"%s\n",info.name);
-        fprintf(fp,"%d\n",info.status);
-        fprintf(fp,"%d\n",info.people);
-        fprintf(fp,"%d\n",info.treasury);
-        fprintf(fp,"%d\n",info.court);
-       // printf("here\n");
+        int a=ftell(fp);
+        fseek(fp,a,SEEK_SET);
+        int x=2019;
+        x=fprintf(fp,"%s\n",info.name);
+        x=fprintf(fp,"%d\n",info.status);
+        x=fprintf(fp,"%d\n",info.people);
+        x=fprintf(fp,"%d\n",info.treasury);
+        x=fprintf(fp,"%d\n",info.court);
         for(i=0;i<primary_number;i++)
         {
             fprintf(fp,"%d\n",info.problems[i]);
@@ -274,7 +266,7 @@ int save(char file_name[],saved_info info,int primary_number)//save the game her
         fclose(fp);
         return 1;
     }
-    FILE *fp=fopen(file_name,"r+");
+    FILE *fp=fopen(file_name,"a");
     assert(fp!=NULL);
     fseek(fp,0,SEEK_END);
     fprintf(fp,"%s\n",info.name);
@@ -289,7 +281,7 @@ int save(char file_name[],saved_info info,int primary_number)//save the game her
     fclose(fp);
     return 1;
 }
-int power_save(char file_name[],saved_info info,int primary_number)
+int power_save(char file_name[],saved_info info,int primary_number)//save each round , so if we have have power issues we wont lose any information
 {
     static int a=0;
     FILE *fp;
@@ -313,9 +305,9 @@ int power_save(char file_name[],saved_info info,int primary_number)
     fclose(fp);
     return 1;
 }
-int if_power(char file_name[])
+int if_power(char file_name[])//check if in the last time playing there was a power cut
 {
-    FILE *fp=fopen(file_name,"r");
+    FILE *fp=fopen(file_name,"a+");
     assert(fp!=NULL);
     fseek(fp,0,SEEK_SET);
     char temp[200];
@@ -326,22 +318,23 @@ int if_power(char file_name[])
     if(status==1) return 1;
     return 0;
 }
-void play_music(int a1,int a2,int a3)
+void play_music(int a1,int a2,int a3)//play a suitable music :)
 {
     Beep(a1,400);
     Beep(a2,400);
     Beep(a3,400);
 }
+//____________________________________________________________________________________________________________________________________________________
 int main()
 {
-    console_color(0,23);
+    console_color(0,15);
     int people=50,treasury=50,court=50,number,primary_number,fpp,status,exit=1,choose=0;
     time_t seed=time(NULL);
     srand(seed);
     saved_info my_info;//save players info in this
     text_color(1);
     printf("<The Falling Empire>\n");
-    play_music(300,350,400);//get the name
+    play_music(300,350,400);
     problem *head=make_linkedlist("CHOICES.txt",&number);//make the linked list
     primary_number=number;
     problem *cur=head;
@@ -351,7 +344,7 @@ int main()
         printf("\nYou Have an Unsaved Game! What Do You Do?\n\n|1| Resume\n|2| New Game\n>");
         scanf("%d",&choose);
     }
-    if(choose==1)//resume the power cut game*****************************
+    if(choose==1)//resume the power cut game*********************************************************************************************************************************
     {
         int i,j,read_temp;
         FILE *fp=fopen("power.txt","r");
@@ -381,7 +374,7 @@ int main()
         Sleep(3000);
     }
 
-    else if(choose==2 || choose==0)//start a new game regarding the power cut game*****************************
+    else if(choose==2 || choose==0)//start a new game regarding the power cut game******************************************************************************************
     {
         printf("Choose a Name:\n>");
         scanf("%s",player_name);
@@ -391,7 +384,7 @@ int main()
         {
             my_info.problems[i]=3;
         }
-        int resume=find_player("save.txt",player_name,&fpp,primary_number);//if the players name exists
+        int resume=find_player("thesave.txt",player_name,&fpp,primary_number);//if the players name exists
         if(resume==1)//resume or new
         {
             int temp;
@@ -412,7 +405,7 @@ int main()
         {
             int i,j,read_temp;
             char temp[200];
-            FILE *fp=fopen("save.txt","r");
+            FILE *fp=fopen("thesave.txt","r");
             assert(fp!=NULL);
             fseek(fp,0,SEEK_SET);
             for(j=0;j<fpp;j++)
@@ -449,12 +442,14 @@ int main()
     }
 
     system("cls");
+    text_color(1);
+    printf("<The Falling Empire>\n");
     text_color(2);
-    printf("\n|People: %d| |Treasury: %d| |Court: %d|\n\n",people,treasury,court);
+    printf("|People: %d|___|Treasury: %d|___|Court: %d|\n\n",people,treasury,court);
     text_color(0);
-    while(1)//the entire GAME!
+    while(1)//the entire GAME!_______________________________________________________________________________________________________________________
     {
-        int i,end_loop=rand()%number,choice;
+        int i,end_loop=abs(rand())%number,choice;
         float average;
         cur=head;
         for(i=0;i<end_loop;i++)//random problem choosing
@@ -501,8 +496,10 @@ int main()
             average=(people+treasury+court)/3;
         }
         system("cls");
+        text_color(1);
+        printf("<The Falling Empire>\n");
         text_color(2);
-        printf("\n|People: %d| |Treasury: %d| |Court: %d|\n\n",people,treasury,court);
+        printf("|People: %d|___|Treasury: %d|___|Court: %d|\n\n",people,treasury,court);
         text_color(0);
         my_info.status=1;
         power_save("power.txt",my_info,primary_number);
@@ -525,10 +522,10 @@ int main()
                 printf("\nGoodbye! ^__^\n");
                 break;
             }
-            if(save("save.txt",my_info,primary_number))
+            if(save("thesave.txt",my_info,primary_number))
             {
                 power_save("power.txt",my_info,primary_number);
-                printf("\nSaved Successfully!\n");
+                printf("\nSaved Successfully! ^__^\n");
                 break;
             }
 
