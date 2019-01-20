@@ -4,6 +4,9 @@
 #include <assert.h>
 #include <windows.h>
 #include <math.h>
+#define file1 "CHOICES.txt"
+#define file2 "thesave.bin"
+#define file3 "power.bin"
 
 struct problems//the entire thing
 {
@@ -163,19 +166,18 @@ problem *make_linkedlist(char name[],int *number)//makes a linked list using the
     fclose(fp);
     return head;
 }
-/*int find_player(char file_name[],char player_name[],int *fpp)//checks if the player has any history
+int find_player(char file_name[],char player_name[],int *fpp)//checks if the player has any history
 {
     FILE *fp=fopen(file_name,"a+b");
-    if(fp==NULL)printf("3");
+    assert(fp!=NULL);
     fseek(fp,0,SEEK_SET);
-    saved_info *read;
+    saved_info read;
     while(1)
     {
-        if(feof) break;
-        fread(read,1,sizeof(saved_info),fp);
-        if(strcmp(read->name,player_name)==0)
+        if(fread(&read,1,sizeof(saved_info),fp)<1) break;
+        if(strcmp(read.name,player_name)==0)
         {
-            *fpp=ftell(fp)-sizeof(saved_info);
+            (*fpp)=ftell(fp)-sizeof(saved_info);
             fclose(fp);
             return 1;
         }
@@ -183,26 +185,52 @@ problem *make_linkedlist(char name[],int *number)//makes a linked list using the
     fclose(fp);
     return -1;
 }
-int save(char file_name[],saved_info *info)
+int save(char file_name[],saved_info info)
 {
     saved_info *read_info;
     int fpp;
-    if(find_player(file_name,info->name,&fpp))
+    if(find_player(file_name,info.name,&fpp))
     {
         FILE *fp=fopen(file_name,"a+b");
-        if(fp==NULL)printf("1");
+        assert(fp!=NULL);
         fseek(fp,fpp,SEEK_SET);
-        fwrite(info,1,sizeof(saved_info),fp);
+        fwrite(&info,1,sizeof(saved_info),fp);
         fclose(fp);
         return 1;
     }
     FILE *fp=fopen(file_name,"a+b");
-    if(fp==NULL)printf("2");
+    assert(fp!=NULL);
     fseek(fp,0,SEEK_END);
-    fwrite(info,1,sizeof(saved_info),fp);
+    fwrite(&info,1,sizeof(saved_info),fp);
     fclose(fp);
     return 1;
-}*/
+}
+int power_save(char file_name[],saved_info info,int primary_number)//save each round , so if we have have power issues we wont lose any information
+{
+    static int a=0;
+    FILE *fp;
+    if(a==0)
+        fp=fopen(file_name,"wb");
+    else
+        fp=fopen(file_name,"r+b");
+    assert(fp!=NULL);
+    a++;
+    fwrite(&info,1,sizeof(saved_info),fp);
+    fclose(fp);
+    return 1;
+}
+int if_power(char file_name[])//check if in the last time playing there was a power cut
+{
+    FILE *fp=fopen(file_name,"a+b");
+    assert(fp!=NULL);
+    fseek(fp,0,SEEK_SET);
+    saved_info info;
+    fread(&info,1,sizeof(saved_info),fp);
+    if(info.status==1) return 1;
+    return 0;
+}
+/*
+//TEXT SAVING VERSION
 int find_player(char file_name[],char player_name[],int *fpp,int primary_number)//if the player has a history
 {
     int i,read_temp;
@@ -316,7 +344,7 @@ int if_power(char file_name[])//check if in the last time playing there was a po
     //printf("%d",status);
     if(status==1) return 1;
     return 0;
-}
+}*/
 void play_music(int a1,int a2,int a3)//play a suitable music :)
 {
     Beep(a1,400);
@@ -338,7 +366,7 @@ int main()
     primary_number=number;
     problem *cur=head,*prev=head;
     char player_name[200];
-    if(if_power("power.txt")==1)//if there was a power cut last time
+    if(if_power(file3)==1)//if there was a power cut last time
     {
         printf("\nYou Have an Unsaved Game! What Do You Do?\n\n|1| Resume\n|2| New Game\n>");
         scanf("%d",&choose);
@@ -346,17 +374,15 @@ int main()
     if(choose==1)//resume the power cut game*********************************************************************************************************************************
     {
         int i,j,read_temp;
-        FILE *fp=fopen("power.txt","r");
+        FILE *fp=fopen(file3,"rb");
         assert(fp!=NULL);
         fseek(fp,0,SEEK_SET);
-        fscanf(fp,"%s",player_name);//players name
-        fscanf(fp,"%d",&status);
-        fscanf(fp,"%d",&people);
-        fscanf(fp,"%d",&treasury);
-        fscanf(fp,"%d",&court);
+        fread(&my_info,1,sizeof(saved_info),fp);
+        people=my_info.people;
+        treasury=my_info.treasury;
+        court=my_info.court;
         for(i=0;i<primary_number;i++)
         {
-            fscanf(fp,"%d",&my_info.problems[i]);
             cur->possibility=my_info.problems[i];
             if(cur->possibility==-1)
             {
@@ -367,11 +393,11 @@ int main()
             prev=cur;
             cur=cur->next;
         }
-        strcpy(my_info.name,player_name);
+        strcpy(player_name,my_info.name);
         text_color(4);
         printf("\nHello %s!\nIts Good To See You Back\n\n",player_name);
         text_color(0);
-        Sleep(3000);
+        Sleep(2000);
     }
 
     else if(choose==2 || choose==0)//start a new game regarding the power cut game******************************************************************************************
@@ -384,7 +410,7 @@ int main()
         {
             my_info.problems[i]=3;
         }
-        int resume=find_player("thesave.txt",player_name,&fpp,primary_number);//if the players name exists
+        int resume=find_player(file2,player_name,&fpp);//if the players name exists
         if(resume==1)//resume or new
         {
             int temp;
@@ -405,31 +431,19 @@ int main()
         {
             int i,j,read_temp;
             char temp[200];
-            FILE *fp=fopen("thesave.txt","r");
+            FILE *fp=fopen(file2,"rb");
             assert(fp!=NULL);
-            fseek(fp,0,SEEK_SET);
-            for(j=0;j<fpp;j++)
-            {
-                fgets(temp,200,fp);
-                for(i=0;i<4+primary_number;i++)
-                {
-                    fscanf(fp,"%d",&read_temp);
-                    //printf("%d\n",read_temp);
-                }
-                fgets(temp,200,fp);//waste
-            }
-            fgets(temp,200,fp);//players name
-            fscanf(fp,"%d",&status);
+            fseek(fp,fpp,SEEK_SET);
+            fread(&my_info,1,sizeof(saved_info),fp);
             cur=head;
             prev=head;
-            if(status!=-1)
+            if(my_info.status!=-1)
             {
-                fscanf(fp,"%d",&people);
-                fscanf(fp,"%d",&treasury);
-                fscanf(fp,"%d",&court);
+                people=my_info.people;
+                treasury=my_info.treasury;
+                court=my_info.court;
                 for(i=0;i<primary_number;i++)
                 {
-                    fscanf(fp,"%d",&my_info.problems[i]);
                     cur->possibility=my_info.problems[i];
                     if(cur->possibility==-1)
                     {
@@ -472,7 +486,7 @@ int main()
         }
         if(head==NULL)//if no problem left
         {
-            head=make_linkedlist("CHOICES.txt",&number);
+            head=make_linkedlist(file1,&number);
             for(i=0;i<primary_number;i++)
             {
                 my_info.problems[i]=3;
@@ -503,7 +517,7 @@ int main()
         printf("|People: %d|___|Treasury: %d|___|Court: %d|\n\n",people,treasury,court);
         text_color(0);
         my_info.status=1;
-        power_save("power.txt",my_info,primary_number);
+        power_save(file3,my_info,primary_number);
         if(people==0 || treasury==0 || court==0 || average<=10 || exit==0)//end of game
         {
             my_info.status=0;
@@ -511,7 +525,7 @@ int main()
             if(exit!=0)
             {
                 my_info.status=-1;
-                play_music(500,550,600);
+                play_music(550,600,650);
                 printf("Your Empire Has Fallen \n");
             }
             printf("What Would You Like To Do?\n|1| Save and Exit\n|2| Exit\n>");
@@ -523,9 +537,9 @@ int main()
                 printf("\nGoodbye! ^__^\n");
                 break;
             }
-            if(save("thesave.txt",my_info,primary_number))
+            if(save(file2,my_info))
             {
-                power_save("power.txt",my_info,primary_number);
+                power_save(file3,my_info,primary_number);
                 printf("\nSaved Successfully! ^__^\n");
                 break;
             }
