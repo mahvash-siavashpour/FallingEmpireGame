@@ -56,6 +56,9 @@ int main()
     system("cls");
     for(i=0;i<n;i++)
     {
+        text_color(14);
+        printf("Question Number%d:\n",i+1);
+        text_color(15);
         FILE *fp=fopen("CHOICES.txt","a");
         assert(fp!=NULL);
         char file_name[20];
@@ -73,6 +76,7 @@ int main()
         printf("Write The First Option Here:\n>");
         gets(ans1);
         fprintf(fpp,"%s\n",ans1);
+        text_color(23);
         printf("Write The Affects of This Option Here:\n>");
         scanf("%d",&tmp);
         fprintf(fpp,"%d\n",tmp);
@@ -82,10 +86,12 @@ int main()
         printf(">");
         scanf("%d",&tmp);
         fprintf(fpp,"%d\n",tmp);
+        text_color(15);
         printf("Write The Second Option Here:\n>");
         gets(ans2);
         gets(ans2);
         fprintf(fpp,"%s\n",ans2);
+        text_color(23);
         printf("Write The Affects of This Option Here:\n>");
         scanf("%d",&tmp);
         fprintf(fpp,"%d\n",tmp);
