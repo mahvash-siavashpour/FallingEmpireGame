@@ -141,7 +141,7 @@ problem *make_linkedlist(char name[],int *number)//makes a linked list using the
         fscanf(fp,"%s",q_file);
         FILE *fpp=fopen(q_file,"r");
         assert(fpp!=NULL);//check if we can even open the question file!
-        //read the shit:
+        //read the THING
         fgets(new_val.question,200,fpp);
         fgets(new_val.ans1,200,fpp);
         fscanf(fpp,"%d",&new_val.people[0]);
@@ -153,7 +153,7 @@ problem *make_linkedlist(char name[],int *number)//makes a linked list using the
         fscanf(fpp,"%d",&new_val.court[1]);
         fscanf(fpp,"%d",&new_val.treasury[1]);
         new_val.possibility=3;
-        new_val.count=0;
+        new_val.count=(*number);
         problem *new_prob=create_new(new_val);
         add_end(&head,new_prob);
         fclose(fpp);
@@ -253,12 +253,11 @@ int save(char file_name[],saved_info info,int primary_number)//save the game
         }
         int a=ftell(fp);
         fseek(fp,a,SEEK_SET);
-        int x=2019;
-        x=fprintf(fp,"%s\n",info.name);
-        x=fprintf(fp,"%d\n",info.status);
-        x=fprintf(fp,"%d\n",info.people);
-        x=fprintf(fp,"%d\n",info.treasury);
-        x=fprintf(fp,"%d\n",info.court);
+        fprintf(fp,"%s\n",info.name);
+        fprintf(fp,"%d\n",info.status);
+        fprintf(fp,"%d\n",info.people);
+        fprintf(fp,"%d\n",info.treasury);
+        fprintf(fp,"%d\n",info.court);
         for(i=0;i<primary_number;i++)
         {
             fprintf(fp,"%d\n",info.problems[i]);
@@ -337,7 +336,7 @@ int main()
     play_music(300,350,400);
     problem *head=make_linkedlist("CHOICES.txt",&number);//make the linked list
     primary_number=number;
-    problem *cur=head;
+    problem *cur=head,*prev=head;
     char player_name[200];
     if(if_power("power.txt")==1)//if there was a power cut last time
     {
@@ -359,12 +358,13 @@ int main()
         {
             fscanf(fp,"%d",&my_info.problems[i]);
             cur->possibility=my_info.problems[i];
-            if(cur->possibility==0)
+            if(cur->possibility==-1)
             {
-                my_info.problems[cur->count]=-1;
                 delete_problem(&head,cur);
                 number--;
+                cur=prev;
             }
+            prev=cur;
             cur=cur->next;
         }
         strcpy(my_info.name,player_name);
@@ -420,6 +420,8 @@ int main()
             }
             fgets(temp,200,fp);//players name
             fscanf(fp,"%d",&status);
+            cur=head;
+            prev=head;
             if(status!=-1)
             {
                 fscanf(fp,"%d",&people);
@@ -429,13 +431,14 @@ int main()
                 {
                     fscanf(fp,"%d",&my_info.problems[i]);
                     cur->possibility=my_info.problems[i];
-                    if(cur->possibility==0)
+                    if(cur->possibility==-1)
                     {
-                        my_info.problems[cur->count]=-1;
                         delete_problem(&head,cur);
                         number--;
+                        cur=prev;
                     }
-                cur=cur->next;
+                    prev=cur;
+                    cur=cur->next;
                 }
             }
         }
@@ -481,20 +484,18 @@ int main()
         {
             exit=0;
         }
-        else
+        else if(choice==1 || choice ==2)
         {
             choice--;
             //do the changes to the government
             people+=cur->people[choice];     if(people<0) people=0;     else if(people>100) people=100;
             treasury+=cur->treasury[choice]; if(treasury<0) treasury=0; else if(treasury>100) treasury=100;
             court+=cur->court[choice];       if(court<0) court=0;       else if(court>100) court=100;
-
-            my_info.people=people;
-            my_info.treasury=treasury;
-            my_info.court=court;
-
-            average=(people+treasury+court)/3;
         }
+        my_info.people=people;
+        my_info.treasury=treasury;
+        my_info.court=court;
+        average=(people+treasury+court)/3;
         system("cls");
         text_color(1);
         printf("<The Falling Empire>\n");
