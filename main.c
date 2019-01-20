@@ -5,8 +5,8 @@
 #include <windows.h>
 #include <math.h>
 #define file1 "CHOICES.txt"
-#define file2 "thesave.bin"
-#define file3 "power.bin"
+#define file2 "SAVE/thesave.bin"
+#define file3 "SAVE/power.bin"
 
 struct problems//the entire thing
 {
@@ -172,12 +172,13 @@ int find_player(char file_name[],char player_name[],int *fpp)//checks if the pla
     assert(fp!=NULL);
     fseek(fp,0,SEEK_SET);
     saved_info read;
+    (*fpp)=0;
     while(1)
     {
-        if(fread(&read,1,sizeof(saved_info),fp)<1) break;
+        if(fread(&read,sizeof(read),1,fp)<1) break;
         if(strcmp(read.name,player_name)==0)
         {
-            (*fpp)=ftell(fp)-sizeof(saved_info);
+            (*fpp)=ftell(fp)-sizeof(read);
             fclose(fp);
             return 1;
         }
@@ -185,23 +186,22 @@ int find_player(char file_name[],char player_name[],int *fpp)//checks if the pla
     fclose(fp);
     return -1;
 }
-int save(char file_name[],saved_info info)
+int save(char file_name[],saved_info info)//save the game
 {
-    saved_info *read_info;
     int fpp;
-    if(find_player(file_name,info.name,&fpp))
+    if(find_player(file_name,info.name,&fpp)==1)
     {
-        FILE *fp=fopen(file_name,"a+b");
+        FILE *fp=fopen(file_name,"r+b");
         assert(fp!=NULL);
         fseek(fp,fpp,SEEK_SET);
-        fwrite(&info,1,sizeof(saved_info),fp);
+        fwrite(&info,sizeof(info),1,fp);
         fclose(fp);
         return 1;
     }
-    FILE *fp=fopen(file_name,"a+b");
+    FILE *fp=fopen(file_name,"r+b");
     assert(fp!=NULL);
     fseek(fp,0,SEEK_END);
-    fwrite(&info,1,sizeof(saved_info),fp);
+    fwrite(&info,sizeof(info),1,fp);
     fclose(fp);
     return 1;
 }
@@ -215,7 +215,8 @@ int power_save(char file_name[],saved_info info,int primary_number)//save each r
         fp=fopen(file_name,"r+b");
     assert(fp!=NULL);
     a++;
-    fwrite(&info,1,sizeof(saved_info),fp);
+    fseek(fp,0,SEEK_SET);
+    fwrite(&info,sizeof(info),1,fp);
     fclose(fp);
     return 1;
 }
@@ -225,9 +226,55 @@ int if_power(char file_name[])//check if in the last time playing there was a po
     assert(fp!=NULL);
     fseek(fp,0,SEEK_SET);
     saved_info info;
-    fread(&info,1,sizeof(saved_info),fp);
+    fread(&info,sizeof(info),1,fp);
     if(info.status==1) return 1;
     return 0;
+}
+void swap(int *a,int *b)
+{
+    int temp=*a;
+    *a=*b;
+    *b=temp;
+}
+void score_boared(char file_name[])
+{
+    FILE *fp=fopen(file_name,"r");
+    assert(fp!=NULL);
+    fseek(fp,0,SEEK_SET);
+    saved_info info;
+    int count=0,score[200]={0},person[200]={0};
+    while(1)
+    {
+        if(fread(&info,sizeof(info),1,fp)<1) break;
+        score[count]=info.people+info.treasury+info.court;
+        person[count]=count+1;
+        count++;
+    }
+    int i,j;
+    for(i=0;i<count;i++)
+    {
+        for(j=0;j<count-1-i;j++)
+        {
+            if(score[j]<score[j+1])
+            {
+                swap(&score[j],&score[j+1]);
+                swap(&person[j],&person[j+1]);
+            }
+        }
+    }
+    if(count>10) count=10;
+    for(i=0;i<count;i++)
+    {
+        fseek(fp,0,SEEK_SET);
+        for(j=0;j<person[i];j++)
+            fread(&info,sizeof(info),1,fp);
+        text_color(11);
+        printf("Player Rank %d: %s ",i+1,info.name);
+        text_color(10);
+        printf("-->Score: %d\n",score[i]);
+        text_color(0);
+    }
+    fclose(fp);
 }
 /*
 //TEXT SAVING VERSION
@@ -362,7 +409,7 @@ int main()
     text_color(1);
     printf("<The Falling Empire>\n");
     play_music(300,350,400);
-    problem *head=make_linkedlist("CHOICES.txt",&number);//make the linked list
+    problem *head=make_linkedlist(file1,&number);//make the linked list
     primary_number=number;
     problem *cur=head,*prev=head;
     char player_name[200];
@@ -377,7 +424,7 @@ int main()
         FILE *fp=fopen(file3,"rb");
         assert(fp!=NULL);
         fseek(fp,0,SEEK_SET);
-        fread(&my_info,1,sizeof(saved_info),fp);
+        fread(&my_info,sizeof(my_info),1,fp);
         people=my_info.people;
         treasury=my_info.treasury;
         court=my_info.court;
@@ -434,7 +481,7 @@ int main()
             FILE *fp=fopen(file2,"rb");
             assert(fp!=NULL);
             fseek(fp,fpp,SEEK_SET);
-            fread(&my_info,1,sizeof(saved_info),fp);
+            fread(&my_info,sizeof(my_info),1,fp);
             cur=head;
             prev=head;
             if(my_info.status!=-1)
@@ -537,13 +584,19 @@ int main()
                 printf("\nGoodbye! ^__^\n");
                 break;
             }
-            if(save(file2,my_info))
+            else if(save(file2,my_info) && choice==1)
             {
                 power_save(file3,my_info,primary_number);
                 printf("\nSaved Successfully! ^__^\n");
-                break;
             }
-
+            getch();
+            system("cls");
+            int ch;
+            text_color(1);
+            printf("______Press 1 to See the Score Board and Press 2 to Exit______\n>");
+            scanf("%d",&ch);
+            if(ch==1) score_boared(file2);
+            break;
         }
 
     }
