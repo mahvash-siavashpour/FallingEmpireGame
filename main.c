@@ -4,27 +4,27 @@
 #include <assert.h>
 #include <windows.h>
 #include <math.h>
-#define file1 "CHOICES.txt"
-#define file2 "SAVE/thesave.bin"
-#define file3 "SAVE/power.bin"
+#define FILE1 "CHOICES.txt"
+#define FILE2 "SAVE/thesave.bin"
+#define FILE3 "SAVE/power.bin"
 
 struct problems//the entire thing
 {
-    char question[200];
-    char ans1[200];
-    int people[2],court[2],treasury[2];
-    char ans2[200];
-    int possibility;//3-0
-    int count;//number of the node
+    char   question[200];
+    char   ans1[200];
+    int    people[2],court[2],treasury[2];
+    char   ans2[200];
+    int    possibility;//3-0
+    int    count;//number of the node
     struct problem *next;
 };typedef struct problems problem;
 
 struct saved_info//information we save
 {
     char name[200];//players name
-    int problems[200];//possibility of nodes in an array
-    int people,treasury,court;
-    int status;//saved meanwhile playing or when lost
+    int  problems[200];//possibility of nodes in an array
+    int  people,treasury,court;
+    int  status;//saved meanwhile playing or when lost
 
 };typedef struct saved_info saved_info;
 
@@ -134,8 +134,8 @@ int delete_problem(problem **head,problem *waste)//delete nodes by their address
 problem *make_linkedlist(char name[],int *number)//makes a linked list using the name of the main text file given
 {
     (*number)=0;
-    char q_file[200];
-    FILE *fp=fopen(name,"r");
+    char  q_file[200];
+    FILE  *fp=fopen(name,"r");
     assert(fp!=NULL);//check if we can even open the choices file!
     problem new_val,*head=NULL;
     while(1)
@@ -168,10 +168,10 @@ problem *make_linkedlist(char name[],int *number)//makes a linked list using the
 }
 int find_player(char file_name[],char player_name[],int *fpp)//checks if the player has any history
 {
-    FILE *fp=fopen(file_name,"a+b");
+    saved_info  read;
+    FILE       *fp=fopen(file_name,"a+b");
     assert(fp!=NULL);
     fseek(fp,0,SEEK_SET);
-    saved_info read;
     (*fpp)=0;
     while(1)
     {
@@ -208,11 +208,9 @@ int save(char file_name[],saved_info info)//save the game
 int power_save(char file_name[],saved_info info,int primary_number)//save each round , so if we have have power issues we wont lose any information
 {
     static int a=0;
-    FILE *fp;
-    if(a==0)
-        fp=fopen(file_name,"wb");
-    else
-        fp=fopen(file_name,"r+b");
+    FILE      *fp;
+    if(a==0)   fp=fopen(file_name,"wb");
+    else       fp=fopen(file_name,"r+b");
     assert(fp!=NULL);
     a++;
     fseek(fp,0,SEEK_SET);
@@ -251,7 +249,7 @@ void score_boared(char file_name[])
         count++;
     }
     int i,j;
-    for(i=0;i<count;i++)
+    for (i=0;i<count;i++)
     {
         for(j=0;j<count-1-i;j++)
         {
@@ -262,19 +260,21 @@ void score_boared(char file_name[])
             }
         }
     }
-    if(count>10) count=10;
+    if (count>10) count=10;
+    printf("\n");
     for(i=0;i<count;i++)
     {
         fseek(fp,0,SEEK_SET);
-        for(j=0;j<person[i];j++)
-            fread(&info,sizeof(info),1,fp);
+        for(j=0;j<person[i];j++) fread(&info,sizeof(info),1,fp);
         text_color(11);
-        printf("Player Rank %d: %s ",i+1,info.name);
+        printf("  Player Rank %-2d: %-10s ",i+1,info.name);
         text_color(10);
         printf("-->Score: %d\n",score[i]);
         text_color(0);
     }
     fclose(fp);
+    text_color(8);
+    printf("\nPress Any Key To Exit...");
 }
 /*
 //TEXT SAVING VERSION
@@ -402,18 +402,20 @@ void play_music(int a1,int a2,int a3)//play a suitable music :)
 int main()
 {
     console_color(0,15);
-    int people=50,treasury=50,court=50,number,primary_number,fpp,status,exit=1,choose=0;
-    time_t seed=time(NULL);
-    srand(seed);
+    int      people=50,treasury=50,court=50,choose=0,exit=1,fpp,number,primary_number,status;
+    time_t   seed=time(NULL);
+    problem *head=make_linkedlist(FILE1,&number),*cur,*prev;//make the linked list
+
+    cur=head;
+    prev=head;
     saved_info my_info;//save players info in this
+    srand(seed);
     text_color(1);
     printf("<The Falling Empire>\n");
     play_music(300,350,400);
-    problem *head=make_linkedlist(file1,&number);//make the linked list
     primary_number=number;
-    problem *cur=head,*prev=head;
     char player_name[200];
-    if(if_power(file3)==1)//if there was a power cut last time
+    if(if_power(FILE3)==1)//if there was a power cut last time
     {
         printf("\nYou Have an Unsaved Game! What Do You Do?\n\n|1| Resume\n|2| New Game\n>");
         scanf("%d",&choose);
@@ -421,7 +423,7 @@ int main()
     if(choose==1)//resume the power cut game*********************************************************************************************************************************
     {
         int i,j,read_temp;
-        FILE *fp=fopen(file3,"rb");
+        FILE *fp=fopen(FILE3,"rb");
         assert(fp!=NULL);
         fseek(fp,0,SEEK_SET);
         fread(&my_info,sizeof(my_info),1,fp);
@@ -457,7 +459,7 @@ int main()
         {
             my_info.problems[i]=3;
         }
-        int resume=find_player(file2,player_name,&fpp);//if the players name exists
+        int resume=find_player(FILE2,player_name,&fpp);//if the players name exists
         if(resume==1)//resume or new
         {
             int temp;
@@ -478,7 +480,7 @@ int main()
         {
             int i,j,read_temp;
             char temp[200];
-            FILE *fp=fopen(file2,"rb");
+            FILE *fp=fopen(FILE2,"rb");
             assert(fp!=NULL);
             fseek(fp,fpp,SEEK_SET);
             fread(&my_info,sizeof(my_info),1,fp);
@@ -516,8 +518,7 @@ int main()
         int i,end_loop=abs(rand())%number,choice;
         float average;
         cur=head;
-        for(i=0;i<end_loop;i++)//random problem choosing
-            cur=cur->next;
+        for (i=0;i<end_loop;i++)  cur=cur->next;//random problem choosing
         my_info.problems[cur->count]--;
         cur->possibility--;
         text_color(0);
@@ -533,7 +534,7 @@ int main()
         }
         if(head==NULL)//if no problem left
         {
-            head=make_linkedlist(file1,&number);
+            head=make_linkedlist(FILE1,&number);
             for(i=0;i<primary_number;i++)
             {
                 my_info.problems[i]=3;
@@ -553,6 +554,12 @@ int main()
             treasury+=cur->treasury[choice]; if(treasury<0) treasury=0; else if(treasury>100) treasury=100;
             court+=cur->court[choice];       if(court<0) court=0;       else if(court>100) court=100;
         }
+        else
+        {
+            text_color(12);
+            printf("Invalid Input\n");
+            return -1;
+        }
         my_info.people=people;
         my_info.treasury=treasury;
         my_info.court=court;
@@ -564,9 +571,10 @@ int main()
         printf("|People: %d|___|Treasury: %d|___|Court: %d|\n\n",people,treasury,court);
         text_color(0);
         my_info.status=1;
-        power_save(file3,my_info,primary_number);
+        power_save(FILE3,my_info,primary_number);
         if(people==0 || treasury==0 || court==0 || average<=10 || exit==0)//end of game
         {
+            int choice,ch;
             my_info.status=0;
             text_color(12);
             if(exit!=0)
@@ -576,32 +584,41 @@ int main()
                 printf("Your Empire Has Fallen \n");
             }
             printf("What Would You Like To Do?\n|1| Save and Exit\n|2| Exit\n>");
-            int choice;
             scanf("%d",&choice);
             text_color(2);
             if(choice==2)
             {
                 printf("\nGoodbye! ^__^\n");
-                break;
+                return 0;
             }
-            else if(save(file2,my_info) && choice==1)
+            else if(save(FILE2,my_info) && choice==1)
             {
-                power_save(file3,my_info,primary_number);
+                power_save(FILE3,my_info,primary_number);
                 printf("\nSaved Successfully! ^__^\n");
+                getch();
+                system("cls");
+                text_color(1);
+                printf("______Press 1 to See the Score Board and Press 2 to Exit______\n>");
+                scanf("%d",&ch);
+                if(ch==1)
+                {
+                    score_boared(FILE2);
+                    break;
+                }
+                return 0;
             }
-            getch();
-            system("cls");
-            int ch;
-            text_color(1);
-            printf("______Press 1 to See the Score Board and Press 2 to Exit______\n>");
-            scanf("%d",&ch);
-            if(ch==1) score_boared(file2);
-            break;
+            else
+            {
+                text_color(12);
+                printf("Invalid Input\n");
+                return -1;
+            }
         }
 
     }
     //Beep(300, 500);
     //printf("\a");
+    getch();
     text_color(0);
     return 0;
 }
