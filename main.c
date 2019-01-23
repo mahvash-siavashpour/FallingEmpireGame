@@ -61,6 +61,7 @@ int main()
         text_color(5);
         printf("\nHello %s!\nIts Good To See You Back\n\n",player_name);
         text_color(0);
+        fclose(fp);
         Sleep(2000);
     }
 
@@ -120,6 +121,7 @@ int main()
                     cur=cur->next;
                 }
             }
+            fclose(fp);
         }
     }
 
@@ -148,7 +150,7 @@ int main()
             delete_problem(&head,cur);
             number--;
         }
-        if(head==NULL)//if no problem left
+        if(number==0)//if no problem left
         {
             head=make_linkedlist(FILE1,&number);
             for(i=0;i<primary_number;i++)
@@ -158,6 +160,12 @@ int main()
             number=primary_number;
         }
         scanf("%d",&choice);
+        while(choice!=1 && choice!=2 && choice!=0)
+        {
+            text_color(12);
+            printf("Invalid Input\nChoose Again>");
+            scanf("%d",&choice);
+        }
         if(choice==0)
         {
             exit=0;
@@ -169,12 +177,6 @@ int main()
             people+=(cur->people[choice]);     if(people<0) people=0;     else if(people>100) people=100;
             treasury+=(cur->treasury[choice]); if(treasury<0) treasury=0; else if(treasury>100) treasury=100;
             court+=(cur->court[choice]);       if(court<0) court=0;       else if(court>100) court=100;
-        }
-        else
-        {
-            text_color(12);
-            printf("Invalid Input\n");
-            return -1;
         }
         my_info.people=people;
         my_info.treasury=treasury;
@@ -201,6 +203,12 @@ int main()
             }
             printf("What Would You Like To Do?\n|1| Save and Exit\n|2| Exit\n>");
             scanf("%d",&choice);
+            while(choice!=1 && choice!=2)
+            {
+                text_color(12);
+                printf("Invalid Input\nEnter Again>");
+                scanf("%d",&choice);
+            }
             text_color(2);
             if(choice==2)
             {
@@ -216,6 +224,12 @@ int main()
                 text_color(1);
                 printf("______Press 1 to See the Score Board and Press 2 to Exit______\n>");
                 scanf("%d",&ch);
+                while(ch!=1 && ch!=2)
+                {
+                    text_color(12);
+                    printf("Invalid Input\nEnter Again>");
+                    scanf("%d",&ch);
+                }
                 if(ch==1)
                 {
                     score_boared(FILE2,player_name);
@@ -223,17 +237,9 @@ int main()
                 }
                 return 0;
             }
-            else
-            {
-                text_color(12);
-                printf("Invalid Input\n");
-                return -1;
-            }
         }
 
     }
-    //Beep(300, 500);
-    //printf("\a");
     getch();
     text_color(0);
     return 0;
