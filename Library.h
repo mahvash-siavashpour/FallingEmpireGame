@@ -61,18 +61,18 @@ int add_end(problem **head,problem *new_problem)//add nodes to the end of link l
 int delete_problem(problem **head,problem *waste)//delete nodes by their address
 {
     problem *cur=*head,*prev;
-    if(*head==NULL) return -1;
+    if(*head==NULL) printf("No Nodes To Delete!\n");
     while(cur!=NULL)
     {
-        if(cur != waste) break;
+        if(cur == waste) break;
         prev=cur;
         cur=cur->next;
     }
-    if(cur==NULL) return -2;
+    if(cur==NULL) printf("Node Not Found!\n");
     if(cur==*head)
     {
         *head=cur->next;
-        //free(cur);
+        free(cur);
         return 1;
     }
     prev->next=cur->next;
@@ -115,7 +115,7 @@ problem *make_linkedlist(char name[],int *number)//makes a linked list using the
     fclose(fp);
     return head;
 }
-int find_player(char file_name[],char player_name[],int *fpp)//checks if the player has any history
+int find_player(char file_name[],char player_name[],int *fpp)//check if the player has any history
 {
     saved_info  read;
     FILE       *fp=fopen(file_name,"a+b");
