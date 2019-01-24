@@ -17,11 +17,10 @@ int main()
     int      people=50,treasury=50,court=50,choose=0,exit=1,fpp,number,primary_number,status;
     time_t   seed=time(NULL);
     problem *head=make_linkedlist(FILE1,&number),*cur,*prev;//make the linked list
-
+    srand(seed);
     cur=head;
     prev=head;
     saved_info my_info;//save players info in this
-    srand(seed);
     text_color(1);
     printf("<The Falling Empire>\n");
     play_music(600,700,800);
@@ -127,7 +126,7 @@ int main()
         }
     }
 
-  //  system("cls");
+    system("cls");
     text_color(1);
     printf("<The Falling Empire>\n");
     text_color(2);
@@ -139,7 +138,6 @@ int main()
         float average;
         cur=head;
         for (i=0;i<end_loop;i++)  cur=cur->next;//random problem choosing
-      //  printf("end loop: %d\n",end_loop);
         (my_info.problems[cur->count])--;
         (cur->possibility)--;
         text_color(0);
@@ -149,12 +147,10 @@ int main()
         text_color(0);
         if(cur->possibility==0)
         {
-       //     printf("delete\n");
             my_info.problems[cur->count]=-1;
             delete_problem(&head,cur);
             number--;
         }
-       // printf("Number:%d  Possibility: %d  %d Number of Q:%d\n",cur->count,my_info.problems[cur->count],cur->possibility,number);
         if(number==0)//if no problem left
         {
             head=make_linkedlist(FILE1,&number);
@@ -187,7 +183,7 @@ int main()
         my_info.treasury=treasury;
         my_info.court=court;
         average=(people+treasury+court)/3;
-        //system("cls");
+        system("cls");
         text_color(1);
         printf("<The Falling Empire>\n");
         text_color(2);
