@@ -135,6 +135,7 @@ int main()
     while(1)//the entire GAME!____________________________________________________________________________________________________________________________________________________
     {
         int i,end_loop=abs(rand())%number,choice;
+        char my_choice[2];
         float average;
         cur=head;
         for (i=0;i<end_loop;i++)  cur=cur->next;//random problem choosing
@@ -160,19 +161,22 @@ int main()
             }
             number=primary_number;
         }
-        scanf("%d",&choice);
-        while(choice!=1 && choice!=2 && choice!=0)
+        scanf("%s",my_choice);
+        while(strcmp(my_choice,"1")!=0 && strcmp(my_choice,"2")!=0 && strcmp(my_choice,"0")!=0)
         {
             text_color(12);
             printf("Invalid Input\nChoose Again>");
-            scanf("%d",&choice);
+            text_color(0);
+            scanf("%s",my_choice);
         }
-        if(choice==0)
+        if(strcmp(my_choice,"0")==0)
         {
             exit=0;
         }
-        else if(choice==1 || choice ==2)
+        else if(strcmp(my_choice,"1")==0 || strcmp(my_choice ,"2")==0)
         {
+
+            choice=atoi(my_choice);
             choice--;
             //do the changes to the government
             people+=(cur->people[choice]);     if(people<0) people=0;     else if(people>100) people=100;
@@ -193,7 +197,7 @@ int main()
         power_save(FILE3,my_info,primary_number);
         if(people==0 || treasury==0 || court==0 || average<=10 || exit==0)//end of game
         {
-            int choice,ch;
+            char my_choice[2],ch[2];
             my_info.status=0;
             text_color(12);
             if(exit!=0)
@@ -203,20 +207,21 @@ int main()
                 printf("Your Empire Has Fallen \n");
             }
             printf("What Would You Like To Do?\n|1| Save and Exit\n|2| Exit\n>");
-            scanf("%d",&choice);
-            while(choice!=1 && choice!=2)
+            scanf("%s",my_choice);
+            while(strcmp(my_choice,"1")!=0 && strcmp(my_choice,"2")!=0)
             {
                 text_color(12);
                 printf("Invalid Input\nEnter Again>");
-                scanf("%d",&choice);
+                text_color(0);
+                scanf("%s",my_choice);
             }
             text_color(2);
-            if(choice==2)
+            if(strcmp(my_choice,"2")==0)
             {
                 printf("\nGoodbye! ^__^\n");
                 return 0;
             }
-            else if(save(FILE2,my_info) && choice==1)
+            else if(save(FILE2,my_info) && strcmp(my_choice,"1")==0)
             {
                 power_save(FILE3,my_info,primary_number);
                 printf("\nSaved Successfully! ^__^\n");
@@ -224,14 +229,15 @@ int main()
                 system("cls");
                 text_color(1);
                 printf("______Press 1 to See the Score Board and Press 2 to Exit______\n>");
-                scanf("%d",&ch);
-                while(ch!=1 && ch!=2)
+                scanf("%s",ch);
+                while(strcmp(ch,"1")!=0 && strcmp(ch,"2")!=0)
                 {
                     text_color(12);
                     printf("Invalid Input\nEnter Again>");
-                    scanf("%d",&ch);
+                    text_color(0);
+                    scanf("%s",ch);
                 }
-                if(ch==1)
+                if(strcmp(ch,"1")==0)
                 {
                     score_boared(FILE2,player_name);
                     break;
