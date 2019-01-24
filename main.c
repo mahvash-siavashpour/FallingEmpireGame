@@ -35,7 +35,7 @@ int main()
         scanf("%d",&choose);
         text_color(9);
     }
-    if(choose==1)//resume the power cut game*********************************************************************************************************************************
+    if(choose==1)//resume the power cut game
     {
         int i,j,read_temp;
         FILE *fp=fopen(FILE3,"rb");
@@ -65,7 +65,7 @@ int main()
         Sleep(2000);
     }
 
-    else if(choose==2 || choose==0)//start a new game regardless of the power cut game******************************************************************************************
+    else if(choose==2 || choose==0)//start a new game regardless of the power cut game
     {
         printf("Choose a Name:\n>");
         if(choose==2) gets(player_name);
@@ -97,14 +97,16 @@ int main()
         {
             int i,j,read_temp;
             char temp[200];
+            saved_info my_info_temp;
             FILE *fp=fopen(FILE2,"rb");
             assert(fp!=NULL);
             fseek(fp,fpp,SEEK_SET);
-            fread(&my_info,sizeof(my_info),1,fp);
+            fread(&my_info_temp,sizeof(my_info),1,fp);
             cur=head;
             prev=head;
-            if(my_info.status!=-1)
+            if(my_info_temp.status!=-1)
             {
+                my_info=my_info_temp;
                 people=my_info.people;
                 treasury=my_info.treasury;
                 court=my_info.court;
@@ -125,7 +127,7 @@ int main()
         }
     }
 
-    system("cls");
+  //  system("cls");
     text_color(1);
     printf("<The Falling Empire>\n");
     text_color(2);
@@ -137,6 +139,7 @@ int main()
         float average;
         cur=head;
         for (i=0;i<end_loop;i++)  cur=cur->next;//random problem choosing
+      //  printf("end loop: %d\n",end_loop);
         (my_info.problems[cur->count])--;
         (cur->possibility)--;
         text_color(0);
@@ -146,10 +149,12 @@ int main()
         text_color(0);
         if(cur->possibility==0)
         {
+       //     printf("delete\n");
             my_info.problems[cur->count]=-1;
             delete_problem(&head,cur);
             number--;
         }
+       // printf("Number:%d  Possibility: %d  %d Number of Q:%d\n",cur->count,my_info.problems[cur->count],cur->possibility,number);
         if(number==0)//if no problem left
         {
             head=make_linkedlist(FILE1,&number);
@@ -182,7 +187,7 @@ int main()
         my_info.treasury=treasury;
         my_info.court=court;
         average=(people+treasury+court)/3;
-        system("cls");
+        //system("cls");
         text_color(1);
         printf("<The Falling Empire>\n");
         text_color(2);
