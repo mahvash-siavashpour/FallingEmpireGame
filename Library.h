@@ -34,18 +34,19 @@ problem *create_new(problem new_problem)//create new nodes for each problem
     new_node->treasury[0]=new_problem.treasury[0];
     new_node->treasury[1]=new_problem.treasury[1];
     new_node->possibility=new_problem.possibility;
+    new_node->count=new_problem.count;
     new_node->next=NULL;
     return new_node;
 }
 
 int add_end(problem **head,problem *new_problem)//add nodes to the end of link list
 {
-    int my_count=0;
+    int my_count=1;
     problem *cur=*head;
     if(*head==NULL)
     {
         *head=new_problem;
-        (*head)->count=0;
+        printf("Func: %d\n**\n",(*head)->count);
         return 1;
     }
     while(cur->next != NULL)
@@ -54,7 +55,6 @@ int add_end(problem **head,problem *new_problem)//add nodes to the end of link l
         my_count++;
     }
     cur->next=new_problem;
-    cur->count=my_count;
     return 1;
 }
 
@@ -106,6 +106,8 @@ problem *make_linkedlist(char name[],int *number)//makes a linked list using the
         fscanf(fpp,"%d",&new_val.treasury[1]);
         new_val.possibility=3;
         new_val.count=(*number);
+        text_color(4);
+        text_color(0);
         problem *new_prob=create_new(new_val);
         add_end(&head,new_prob);
         fclose(fpp);
