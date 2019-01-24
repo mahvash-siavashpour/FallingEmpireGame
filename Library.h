@@ -46,7 +46,6 @@ int add_end(problem **head,problem *new_problem)//add nodes to the end of link l
     if(*head==NULL)
     {
         *head=new_problem;
-        printf("Func: %d\n**\n",(*head)->count);
         return 1;
     }
     while(cur->next != NULL)
