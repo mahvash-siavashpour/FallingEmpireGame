@@ -14,8 +14,9 @@
 int main()
 {
     console_color(0,15);
-    int      people=50,treasury=50,court=50,choose=0,exit=1,fpp,number,primary_number,status;
+    int      people=50,treasury=50,court=50,exit=1,fpp,number,primary_number,status;
     time_t   seed=time(NULL);
+    char     choose[2]="0";
     problem *head=make_linkedlist(FILE1,&number),*cur,*prev;//make the linked list
     srand(seed);
     cur=head;
@@ -31,10 +32,18 @@ int main()
     {
         text_color(6);
         printf("\nYou Have an Unsaved Game! What Do You Do?\n\n|1| Resume\n|2| New Game\n>");
-        scanf("%d",&choose);
+        //scanf("%d",&choose);
+        scanf("%s",choose);
+        while(strcmp(choose,"1")!=0 && strcmp(choose,"2")!=0)
+        {
+            text_color(12);
+            printf("Invalid Input\nEnter Again>");
+            text_color(0);
+            scanf("%s",choose);
+        }
         text_color(9);
     }
-    if(choose==1)//resume the power cut game
+    if(strcmp(choose,"1")==0)//resume the power cut game
     {
         int i,j,read_temp;
         FILE *fp=fopen(FILE3,"rb");
@@ -64,10 +73,10 @@ int main()
         Sleep(2000);
     }
 
-    else if(choose==2 || choose==0)//start a new game regardless of the power cut game
+    else if(strcmp(choose,"2")==0 || strcmp(choose,"0")==0)//start a new game regardless of the power cut game
     {
         printf("Choose a Name:\n>");
-        if(choose==2) gets(player_name);
+        if(strcmp(choose,"2")==0) gets(player_name);
         gets(player_name);
         strcpy(my_info.name,player_name);
         int i;
@@ -78,12 +87,20 @@ int main()
         int resume=find_player(FILE2,player_name,&fpp);//if the players name exists
         if(resume==1)//resume or new
         {
-            int temp;
+            char temp[2];
             text_color(5);
             printf("\nGood To See You Back %s!\nYou Can Either :\n|1| Resume Your Game\n|2| Start a New Game\n>",player_name);
             text_color(0);
-            scanf("%d",&temp);
-            if(temp==2) resume=0;
+            //scanf("%d",&temp);
+            scanf("%s",temp);
+            while(strcmp(temp,"1")!=0 && strcmp(temp,"2")!=0)
+            {
+                text_color(12);
+                printf("Invalid Input\nEnter Again>");
+                text_color(0);
+                scanf("%s",temp);
+            }
+            if(strcmp(temp,"2")==0) resume=0;
             Sleep(100);
         }
         else
