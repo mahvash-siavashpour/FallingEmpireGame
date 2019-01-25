@@ -218,6 +218,7 @@ int main()
             text_color(2);
             if(strcmp(my_choice,"2")==0)
             {
+                power_save(FILE3,my_info,primary_number);
                 printf("\nGoodbye! ^__^\n");
                 return 0;
             }
