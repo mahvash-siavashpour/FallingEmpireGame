@@ -191,18 +191,32 @@ void swap(int *a,int *b)//swap 2 integers
 }
 void score_boared(char file_name[],char player_name[])//prints the score board
 {
-    FILE *fp=fopen(file_name,"r");
+    FILE *my_fp=fopen(file_name,"r");
     int i,j,color1=11,color2=10;
-    assert(fp!=NULL);
-    fseek(fp,0,SEEK_SET);
+    assert(my_fp!=NULL);
+    fseek(my_fp,0,SEEK_SET);
     saved_info info;
     int count=0,score[200]={0},person[200]={0};
     while(1)
     {
-        if(fread(&info,sizeof(info),1,fp)<1) break;
+        if(fread(&info,sizeof(info),1,my_fp)<1)
+        {
+            /*
+            int j=0;
+            printf("\nname:%s people:%d treasury:%d court:%d status:%d\n",info.name,info.people,info.treasury,info.court,info.status);
+            while(info.problems[j]!=0)
+            {
+                printf("%d ",info.problems[j]);
+                j++;
+            }
+            printf("done\n");
+            */
+            break;
+        }
         score[count]=info.people+info.treasury+info.court;
         person[count]=count+1;
         count++;
+       // printf("here %d",count);
     }
     for (i=0;i<count;i++)
     {
@@ -210,6 +224,7 @@ void score_boared(char file_name[],char player_name[])//prints the score board
         {
             if(score[j]<score[j+1])
             {
+              //  printf("*\n");
                 swap(&score[j],&score[j+1]);
                 swap(&person[j],&person[j+1]);
             }
@@ -217,10 +232,12 @@ void score_boared(char file_name[],char player_name[])//prints the score board
     }
     if (count>10) count=10;
     printf("\n");
+ //   printf("count:%d\n",count);
     for(i=0;i<count;i++)
     {
-        fseek(fp,0,SEEK_SET);
-        for(j=0;j<person[i];j++) fread(&info,sizeof(info),1,fp);
+      //  printf("%d\n",person[i]);
+        fseek(my_fp,0,SEEK_SET);
+        for(j=0;j<person[i];j++) fread(&info,sizeof(info),1,my_fp);
         if(strcmp(info.name,player_name)==0)
         {
             color1=5;
@@ -234,7 +251,7 @@ void score_boared(char file_name[],char player_name[])//prints the score board
         color1=11;
         color2=10;
     }
-    fclose(fp);
+    fclose(my_fp);
     text_color(8);
     printf("\nPress Any Key To Exit...");
 }
